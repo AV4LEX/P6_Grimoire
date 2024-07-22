@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const booksSchema = mongoose.Schema({
+const bookSchema = mongoose.Schema({
     userId: { type: String, required: true},
     title: { type: String, required: true},
     author: { type: String, required: true},
@@ -11,4 +11,4 @@ const booksSchema = mongoose.Schema({
     averageRating: { type: Number, required: true},
 });
 
-module.exports = mongoose.model('books', booksSchema);
+module.exports = mongoose.model('book', bookSchema);
