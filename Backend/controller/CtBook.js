@@ -28,3 +28,37 @@ exports.getOneBook = (req, res, next) => {
     .then(book => res.status(200).json(book))
     .catch(error => res.status(404).json({ error }));
 }
+
+//PUT
+exports.modifyBook = (req, res, next) => {
+
+    const BOOK_OBJECT = req.file ? {
+        ...JSON.parse(req.body.book),
+        imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${req.file.filename}`
+    } : { ...req.body };
+
+    delete BOOK_OBJECT._userId;
+
+    book.findOne({_id: req.params.id})
+    .then((book) => {
+        if(book.userId != req.auth.userId) {
+            res.status(403).json({ message : '403: unauthorized request' });
+        }else{
+
+            const FILE_NAME = book.imageUrl.split('/images/')[1];
+            req.file && FileSystem.unlink('images/${FILE_NAME}', (err => {
+                    if (err) console.log(err);
+                })
+            );
+        
+
+            book.updateOne({ _id: req.params.id }, { ...BOOK_OBJECT, _id: req.params.id })
+            .then(() => res.status(200).json({ message: 'Objet modifié !' }))
+            .catch(error => res.staus(400).json({ error }));
+        }
+    })
+    .catch((error) => {
+        res.status(404).json({ error });
+    });
+};
+
