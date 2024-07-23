@@ -1,6 +1,6 @@
 const book = require('../models/book');
 const fs = require('fs');
-const average = require('../utils/average');
+const average = require('../util/average');
 
 //POST
 exports.createBook = (req, res, next) => {
