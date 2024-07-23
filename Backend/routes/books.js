@@ -1,15 +1,15 @@
-const EXPRESS = require('express');
-const ROUTER = EXPRESS.Router();
+const express = require('express');
+const auth = require('auth');
+const router = express.Router();
 
-const BOOK_CT = require('../controller/Books');
+const bookCtrl = require('../controller/Books');
 
+router.get('/', bookCtrl.getAllBooks);
+router.get('/bestrating', bookCtrl.getBestRating);
+router.get('/:id', bookCtrl.getOneBook);
+router.post('/', auth, upload, upload.resizeImage, bookCtrl.createBook);
+router.post('/:id/rating', auth, bookCtrl.createRating);
+router.put('/:id', auth, upload, upload.resizeImage, bookCtrl.modifyBook);
+router.delete('/:id', auth, bookCtrl.deleteBook);
 
-ROUTER.get('/', BOOK_CT.getAllBooks);
-ROUTER.get('/bestrating', BOOK_CT.getBestRating);
-ROUTER.get('/:id', BOOK_CT.getOneBook);
-ROUTER.post('/', auth, upload, upload.resizeImage, BOOK_CT.createBook);
-ROUTER.post('/:id/rating', auth, BOOK_CT.createRating);
-ROUTER.put('/:id', auth, upload, upload.resizeImage, BOOK_CT.modifyBook);
-ROUTER.delete('/:id', auth, BOOK_CT.deleteBook);
-
-module.exports = ROUTER;
+module.exports = router;
