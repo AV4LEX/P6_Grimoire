@@ -1,4 +1,6 @@
 const book = require('../models/book');
+const fs = require('fs');
+const average = require('../utils/average');
 
 //POST
 exports.createBook = (req, res, next) => {
@@ -90,3 +92,47 @@ exports.getAllBooks = (req, res, next) => {
         .then(books => res.status(200).json(books))
         .catch(error => res.status(404).json({ error }));
 };
+
+
+//POST
+exports.createRating = (req, res, next) => {
+    if(0 <= req.body.rating <= 5) {
+        const RATING_OBJECT = { ...req.body, grade: req.body.rating };
+
+        delete RATING_OBJECT.id;
+
+        book.findOne({_id: req.params.id})
+        .then(book => {
+            const NEW_RATING = book.ratings;
+            const USERID_ARRAY = NEW_RATING.map(rating => rating.userId);
+
+            if (USERID_ARRAY.includes(req.auth.userId)) {
+                res.status(403).json({ message: 'not authorized' });
+            } else {
+                NEW_RATING.push(RATING_OBJECT);
+
+                const GRADES = NEW_RATING.map(rating => rating.grade);
+                const AVERAGE_GRADES = average.average(GRADES);
+                book.averageRating = AVERAGE_GRADES;
+
+                book.updateOne({ _id: req.params.id }, {ratings: NEW_RATING, averageRating: AVERAGE_GRADES, _id: req.params.id })
+                .then(() => {res.status(201).json()})
+                .catch(error => { res.status(400).json( { error })});
+                res.status(200).json(book);
+            }
+        })
+        .catch((error) => {
+            res.status(404).json({ error });
+        });
+    } else {
+        res.status(404).json({ message: 'la note doit être comprise entre 1 et 5' });
+    }
+};
+
+
+//GET
+exports.getBestRating = (req, res, next) => {
+    book.find().sort({averageRating: -1}).limit(3)
+    .then((books) => res.status(200).json(books))
+    .catch((error) => res.status(404).json({ error }));
+}
