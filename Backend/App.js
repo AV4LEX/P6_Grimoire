@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const path = require('path');
-const password = require('./utils/password')
+
 
 // Connexion à la base de données
 mongoose.connect('mongodb+srv://vaslin:6eAISq69QeilpZ1j@cluster0.iacezpd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
@@ -17,7 +17,7 @@ const app = express();
 // Middleware permettant à Express d'extraire le corps JSON des requêtes POST
 app.use(express.json());
 
-// Middleware gérant les erreurs de CORS
+//CORS
 app.use((req, res, next) => {
     // Accès à notre API depuis n'importe quelle origine
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,5 +34,6 @@ app.use('/images', express.static(path.join(__dirname, 'images')));
 // Enregistrement des routeurs
 app.use('/api/auth', userRoutes);
 app.use('/api/books', booksRoutes);
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 module.exports = app;

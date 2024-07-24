@@ -6,23 +6,21 @@ const fs = require('fs');
 
 // POST => Enregistrement d'un livre
 exports.createBook = (req, res, next) => {
-    // Stockage de la requête sous forme de JSON dans une constante (requête sous la forme form-data à l'origine)
+    //form-data to object
     const bookObject = JSON.parse(req.body.book);
-    // Suppression du faux _id envoyé par le front
-    delete bookObject._id;
-    // Suppression de _userId auquel on ne peut faire confiance
-    delete bookObject._userId;
-    // Création d'une instance du modèle Book
+    //create book
     const book = new Book({
         ...bookObject,
         userId: req.auth.userId,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${req.file.filename}`,
-        averageRating: bookObject.ratings[0].grade
+        ratings: [],
+        averageRating: 0,
+        //get image url 
+        imageUrl: `${req.protocol}://${req.get('host')}/images/opt_${req.file.filename}`
     });
-    // Enregistrement dans la base de données
+    //save book
     book.save()
-        .then(() => { res.status(201).json({ message: 'Objet enregistré !' }) })
-        .catch(error => { res.status(400).json( { error }) })
+        .then(() => res.status(201).json({ message: 'Book successfully created' }))
+        .catch(error => res.status(400).json({ error }));
 };
 
 // GET => Récupération d'un livre spécifique
