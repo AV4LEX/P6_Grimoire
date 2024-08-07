@@ -1,11 +1,17 @@
 const Book = require('../models/book');
 const average = require('../utils/average');
+const path = require('path');
 const fs = require('fs');
 
 // Logique métier - Contrôleur
 
 // POST => Enregistrement d'un livre
 exports.createBook = (req, res, next) => {
+
+    // Vérifier que toutes les données nécessaires sont présentes
+    if (!req.body.title || !req.body.author || !req.file) {
+        return res.status(400).json({ message: 'Le formulaire est incomplet' });
+    }
     //form-data to object
     const bookObject = JSON.parse(req.body.book);
     //create book
@@ -15,7 +21,7 @@ exports.createBook = (req, res, next) => {
         ratings: [],
         averageRating: 0,
         //get image url 
-        imageUrl: `${req.protocol}://${req.get('host')}/images/opt_${req.file.filename}`
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`
     });
     //save book
     book.save()
@@ -36,34 +42,44 @@ exports.modifyBook = (req, res, next) => {
     // (ici, nous recevons soit un élément form-data, soit des données JSON, selon si le fichier image a été modifié ou non)
     const bookObject = req.file ? {
         ...JSON.parse(req.body.book),
-        imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${req.file.filename}` 
+        imageUrl: `${req.protocol}://${req.get('host')}/images/${path.basename(req.file.filename, path.extname(req.file.filename))}.webp` 
     } : { ...req.body };
+
     // Suppression de _userId auquel on ne peut faire confiance
     delete bookObject._userId;
+
     // Récupération du livre existant à modifier
-    Book.findOne({_id: req.params.id})
+    Book.findOne({ _id: req.params.id })
         .then((book) => {
             // Le livre ne peut être mis à jour que par le créateur de sa fiche
             if (book.userId != req.auth.userId) {
-                res.status(403).json({ message : '403: unauthorized request' });
-            } else {
-                // Séparation du nom du fichier image existant
-                const filename = book.imageUrl.split('/images/')[1];
-                // Si l'image a été modifiée, on supprime l'ancienne
-                req.file && fs.unlink(`images/${filename}`, (err => {
-                        if (err) console.log(err);
-                    })
-                );
-                // Mise à jour du livre
-                Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
-                    .then(() => res.status(200).json({ message: 'Objet modifié !' }))
-                    .catch(error => res.status(400).json({ error }));
+                return res.status(403).json({ message: '403: unauthorized request' });
             }
+            
+            // Si une nouvelle image a été téléchargée, nous supprimons l'ancienne
+            if (req.file) {
+                // Séparation du nom du fichier image existant
+                const oldFilename = path.basename(book.imageUrl);
+                const oldFilePath = path.join('images', oldFilename);
+                
+                // Supprimer l'ancienne image
+                fs.unlink(oldFilePath, (err) => {
+                    if (err) {
+                        console.log('Error deleting old file:', err);
+                    }
+                });
+            }
+            
+            // Mise à jour du livre
+            Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+                .then(() => res.status(200).json({ message: 'Objet modifié !' }))
+                .catch(error => res.status(400).json({ error }));
         })
         .catch((error) => {
             res.status(404).json({ error });
         });
 };
+
 
 
 // DELETE => Suppression d'un livre
