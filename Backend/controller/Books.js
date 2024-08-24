@@ -9,9 +9,9 @@ const fs = require('fs');
 exports.createBook = (req, res, next) => {
 
     // Vérifier que toutes les données nécessaires sont présentes
-    if (!req.body.title || !req.body.author || !req.file) {
+    /*if (!req.body.title || !req.body.author || !req.file) {
         return res.status(400).json({ message: 'Le formulaire est incomplet' });
-    }
+    }*/
     //form-data to object
     const bookObject = JSON.parse(req.body.book);
     //create book
